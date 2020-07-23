@@ -11,5 +11,14 @@
 
     <artifactId>CloudServer</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>ru.netcloud</groupId>
+            <artifactId>CloudClientServer</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+
 
 </project>
