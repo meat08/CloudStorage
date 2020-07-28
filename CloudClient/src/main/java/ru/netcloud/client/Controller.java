@@ -9,9 +9,14 @@ import javafx.scene.control.TextField;
 import java.io.*;
 import java.net.Socket;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
+
+    private final byte[] GET_COMMAND = {10};
+    private final byte[] PUT_COMMAND = {11};
+    private final byte[] OK_COMMAND = {1};
 
     public ListView<String> lv;
     public TextField txt;
@@ -19,6 +24,7 @@ public class Controller implements Initializable {
     private Socket socket;
     private DataInputStream is;
     private DataOutputStream os;
+    private int bufferSize;
     private final String clientFilesPath = "CloudClient/data/clientFiles";
 
     @Override
@@ -30,69 +36,122 @@ public class Controller implements Initializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        updateFileList();
+    }
+
+    private void updateFileList() {
         File dir = new File(clientFilesPath);
+        lv.getItems().clear();
         for (String file : dir.list()) {
             lv.getItems().add(file);
         }
     }
 
-    // ./download fileName
-    // ./upload fileName
-    public void sendCommand(ActionEvent actionEvent) {
+    public void sendCommand(ActionEvent actionEvent) throws IOException {
         String command = txt.getText();
         String [] op = command.split(" ");
         try {
             if (op[0].equals("/get")) {
-                    os.write((op[0] + " " + op[1]).getBytes());
-                String response = getServerReady();
-                if (response.equals("OK")) {
-                    File file = new File(clientFilesPath + "/" + op[1]);
-                    if (!file.exists()) {
-                        file.createNewFile();
-                    }
-                    long len = is.readLong();
-                    byte [] buffer = new byte[1024];
-                    try(FileOutputStream fos = new FileOutputStream(file)) {
-                        if (len < 1024) {
-                            int count = is.read(buffer);
-                            fos.write(buffer, 0, count);
-                        } else {
-                            for (long i = 0; i < len / 1024; i++) {
-                                int count = is.read(buffer);
-                                fos.write(buffer, 0, count);
-                            }
-                        }
-                    }
-                    lv.getItems().add(op[1]);
-                }
+                getFileFromServer(op[1]);
+                updateFileList();
+
             } else if (op[0].equals("/put")) {
-                os.write((op[0] + " " + op[1]).getBytes());
-                File file = new File(clientFilesPath + "/" + op[1]);
-                String response = getServerReady();
-                if (response.equals("OK") & file.exists()) {
-                    try(FileInputStream fis = new FileInputStream(file)) {
-                        long len = file.length();
-                        os.write(Long.toString(len).getBytes());
-                        os.flush();
-                        String response1 = getServerReady();
-                        if (response1.equals("OK")) {
-                            byte [] buffer = new byte[1024];
-                            if (len < 1024) {
-                                int count = fis.read(buffer);
-                                os.write(buffer, 0, count);
-                            } else {
-                                for (long i = 0; i < len / 1024; i++) {
-                                    int count = fis.read(buffer);
-                                    os.write(buffer, 0, count);
-                                }
-                            }
-                        }
-                    }
-                }
+                putFilesToSever(op[1]);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void putFilesToSever(String s) throws IOException {
+        File file = new File(clientFilesPath, s);
+        long fileSize = file.length();
+        byte[] fileNameBytes = s.getBytes();
+        if (fileNameBytes.length > 127) {
+            System.out.println("Слишком длинное имя файла");
+        } else {
+            os.write(PUT_COMMAND);
+            if (isOkReceived()) {
+                os.write(fileNameBytes.length);
+            }
+            if (isOkReceived()) {
+                os.write(fileNameBytes);
+            }
+            if (isOkReceived()) {
+                os.writeLong(fileSize);
+            }
+            if (isOkReceived()) {
+                try(FileInputStream fos = new FileInputStream(file)) {
+                    calculateBufferSize(fileSize);
+                    byte [] buffer = new byte[bufferSize];
+                    if (fileSize < bufferSize) {
+                        int count = fos.read(buffer);
+                        os.write(buffer, 0, count);
+                    } else {
+                        int x = 0;
+                        for (long i = 0; i < fileSize / bufferSize; i++) {
+                            int count = fos.read(buffer);
+                            x += count;
+                            System.out.println(x);
+                            os.write(buffer, 0, count);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void getFileFromServer(String s) throws IOException {
+        os.write(GET_COMMAND);
+        byte[] fileNameBytes = s.getBytes();
+        long fileSize;
+        if (fileNameBytes.length > 127) {
+            System.out.println("Слишком длинное имя файла");
+        } else {
+            if (isOkReceived()) {
+                os.write(fileNameBytes.length);
+            }
+            if (isOkReceived()) {
+                os.write(fileNameBytes);
+            }
+            if (isOkReceived()) {
+                fileSize = is.readLong();
+                File file = new File(clientFilesPath, s);
+                if (!file.exists()) {
+                    if (!file.createNewFile()) {
+                        System.out.println("не удалось создать файл");
+                        return;
+                    }
+                }
+                try(FileOutputStream fos = new FileOutputStream(file)) {
+                    calculateBufferSize(fileSize);
+                    byte [] buffer = new byte[bufferSize];
+                    if (fileSize < bufferSize) {
+                        int count = is.read(buffer);
+                        fos.write(buffer, 0, count);
+                    } else {
+                        for (long i = 0; i < fileSize / bufferSize; i++) {
+                            int count = is.read(buffer);
+                            fos.write(buffer, 0, count);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void calculateBufferSize(long fileSize) {
+        if (fileSize < 1000000) {
+            bufferSize = 4096;
+        } else {
+            bufferSize = 65536;
+        }
+    }
+
+    private boolean isOkReceived() throws IOException {
+        byte[] okBytes = new byte[1];
+        is.read(okBytes);
+        return Arrays.equals(okBytes, OK_COMMAND);
     }
 
     private String getServerReady() throws IOException {
