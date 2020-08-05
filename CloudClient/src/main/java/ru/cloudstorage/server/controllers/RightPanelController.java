@@ -1,14 +1,25 @@
 package ru.cloudstorage.server.controllers;
 
-import javafx.scene.control.*;
+import javafx.event.ActionEvent;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import ru.cloudstorage.clientserver.FileList;
 import ru.cloudstorage.clientserver.GetFileListCommand;
 import ru.cloudstorage.server.network.Network;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
-public class RightPanelController extends PanelsController {
+public class RightPanelController extends PanelController {
+
+    private String serverRootPath;
+    private String serverClientPath;
+
+    @Override
+    public void globalUpdateList() {
+        updateList(Paths.get(serverClientPath));
+    }
 
     @Override
     public void updateList(Path path) {
@@ -25,8 +36,15 @@ public class RightPanelController extends PanelsController {
         }
     }
 
-    @Override
-    public void globalUpdateList() {
-        updateList(Paths.get(ROOT_PATH.toString(), "client1"));
+    public void btnPathUpActionR(ActionEvent actionEvent) {
+        Path upperPath = Paths.get(pathField.getText()).getParent();
+        if (upperPath != null & !Objects.equals(upperPath, Paths.get(serverRootPath))) {
+            updateList(upperPath);
+        }
+    }
+
+    public void setServerPaths(String serverRootPath, String serverClientPath) {
+        this.serverRootPath = serverRootPath;
+        this.serverClientPath = serverClientPath;
     }
 }

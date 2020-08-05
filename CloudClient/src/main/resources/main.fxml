@@ -12,19 +12,33 @@
       fx:controller="ru.cloudstorage.server.controllers.MainController"
       prefHeight="400.0" prefWidth="600.0">
 
-    <HBox VBox.vgrow="ALWAYS">
+    <VBox fx:id="loginBox" alignment="CENTER" style=" -fx-border-color:black; -fx-border-width: 1; -fx-border-style: solid;">
+        <Label text="Логин:"/>
+        <TextField fx:id="loginField" HBox.hgrow="ALWAYS" maxWidth="300" onAction="#btnLoginAction"/>
+        <Label text="Пароль:" />
+        <PasswordField fx:id="passwordField" HBox.hgrow="ALWAYS" maxWidth="300" onAction="#btnLoginAction"/>
+        <Label fx:id="loginLabel" textFill="red"/>
+        <HBox spacing="5" alignment="CENTER">
+            <Button text="Войти" HBox.hgrow="ALWAYS" onAction="#btnLoginAction"/>
+        </HBox>
+        <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+        </padding>
+    </VBox>
+
+    <HBox fx:id="tablePanel" VBox.vgrow="ALWAYS" visible="false" managed="false">
         <fx:include fx:id="leftPanel" source="leftPanel.fxml" HBox.hgrow="ALWAYS" />
         <fx:include fx:id="rightPanel" source="rightPanel.fxml" HBox.hgrow="ALWAYS" />
     </HBox>
 
-    <HBox spacing="5">
-        <Button maxWidth="Infinity" focusTraversable="false" text="Копировать файл" HBox.hgrow="ALWAYS" />
-        <Button maxWidth="Infinity" focusTraversable="false" text="Переместить файл" HBox.hgrow="ALWAYS"/>
-        <Button maxWidth="Infinity" focusTraversable="false" text="Удалить файл" HBox.hgrow="ALWAYS"/>
-        <Button maxWidth="Infinity" focusTraversable="false" text="Выход из программы" HBox.hgrow="ALWAYS" onAction="#btnExitAction"/>
+    <HBox fx:id="buttonBlock" spacing="5" visible="false" managed="false">
+        <Button maxWidth="Infinity" focusTraversable="false" text="Копировать файл" HBox.hgrow="ALWAYS" onAction="#btnCopyAction"/>
+        <Button maxWidth="Infinity" focusTraversable="false" text="Обновить список" HBox.hgrow="ALWAYS" onAction="#btnUpdateAction"/>
+        <Button maxWidth="Infinity" focusTraversable="false" text="Удалить файл" HBox.hgrow="ALWAYS" onAction="#btnDeleteAction"/>
         <padding>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
         </padding>
     </HBox>
+    <Button maxWidth="Infinity" focusTraversable="false" text="Выход из программы" HBox.hgrow="ALWAYS" onAction="#btnExitAction"/>
 
 </VBox>

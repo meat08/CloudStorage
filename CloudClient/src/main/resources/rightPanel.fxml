@@ -6,14 +6,16 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox alignment="center"  xmlns="http://javafx.com/javafx"
+<VBox xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="ru.cloudstorage.server.controllers.RightPanelController">
 
-    <HBox>
-        <TextField fx:id="pathField" editable="false" HBox.hgrow="ALWAYS"/>
-        <Button text="Вверх" onAction="#btnPathUpAction"/>
-    </HBox>
-    <TableView fx:id="filesTable" VBox.vgrow="ALWAYS"/>
-
+        <HBox HBox.hgrow="ALWAYS">
+            <TextField fx:id="pathField" editable="false" HBox.hgrow="ALWAYS" visible="false"/>
+            <Button text="Вверх" onAction="#btnPathUpActionR"/>
+        </HBox>
+        <TableView fx:id="filesTable" VBox.vgrow="ALWAYS"/>
+    <properties>
+        <ctrl><fx:reference source="controller"/></ctrl>
+    </properties>
 </VBox>

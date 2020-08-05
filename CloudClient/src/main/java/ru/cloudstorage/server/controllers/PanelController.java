@@ -4,30 +4,26 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import ru.cloudstorage.clientserver.FileInfo;
 
-import java.net.URL;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
-import java.util.Objects;
-import java.util.ResourceBundle;
 
-public abstract class PanelsController implements Initializable {
-
-    public static final Path ROOT_PATH = Paths.get("CloudServer", "data");
-
+public abstract class PanelController {
     @FXML
     TableView<FileInfo> filesTable;
 
     @FXML
+    ComboBox<String> disksBox;
+
+    @FXML
     TextField pathField;
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    public void create() {
         TableColumn<FileInfo, String> fileTypeColumn = new TableColumn<>();
         fileTypeColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getType().getName()));
         fileTypeColumn.setPrefWidth(24);
@@ -64,16 +60,22 @@ public abstract class PanelsController implements Initializable {
         filesTable.getColumns().addAll(fileTypeColumn, filenameColumn, fileSizeColumn, fileDateColumn);
         filesTable.getSortOrder().add(fileTypeColumn);
 
+        if (this instanceof LeftPanelController) {
+            disksBox.getItems().clear();
+            for (Path p : FileSystems.getDefault().getRootDirectories()) {
+                disksBox.getItems().add(p.toString());
+            }
+            disksBox.getSelectionModel().select(0);
+        }
+
         filesTable.setOnMouseClicked(event -> {
             if (event.getClickCount() == 2) {
                 Path path = Paths.get(pathField.getText()).resolve(filesTable.getSelectionModel().getSelectedItem().getFilename());
                 if (Files.isDirectory(path)) {
-                    System.out.println(path.toString());
                     updateList(path);
                 }
             }
         });
-
         globalUpdateList();
     }
 
@@ -85,17 +87,15 @@ public abstract class PanelsController implements Initializable {
 
     public void btnPathUpAction(ActionEvent actionEvent) {
         Path upperPath = Paths.get(pathField.getText()).getParent();
-        if (upperPath != null & !Objects.equals(upperPath, ROOT_PATH)) {
+        if (upperPath != null) {
             updateList(upperPath);
         }
     }
-
 
     public void selectDiskAction(ActionEvent actionEvent) {
         ComboBox<String> element = (ComboBox<String>) actionEvent.getSource();
         updateList(Paths.get(element.getSelectionModel().getSelectedItem()));
     }
-
 
     public String getSelectedFilename() {
         if (!filesTable.isFocused()) {
