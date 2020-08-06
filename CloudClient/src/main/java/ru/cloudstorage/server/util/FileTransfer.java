@@ -1,18 +1,23 @@
 package ru.cloudstorage.server.util;
 
-import ru.cloudstorage.clientserver.FileMessage;
-import ru.cloudstorage.clientserver.SendFileCommand;
+import javafx.application.Platform;
+import javafx.scene.control.ProgressBar;
+import ru.cloudstorage.clientserver.FileMessageCommand;
+import ru.cloudstorage.clientserver.FileRequestCommand;
+import ru.cloudstorage.clientserver.RemoveFileCommand;
 import ru.cloudstorage.server.network.Network;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 
 public class FileTransfer {
 
-    public static void putFileToServer(Path src, Path dst, CountDownLatch cdl)  {
+    public static void putFileToServer(Path src, Path dst, CountDownLatch cdl, ProgressBar progressBar)  {
         new Thread(() -> {
             try {
                 File srcFile = src.toFile();
@@ -22,7 +27,7 @@ public class FileTransfer {
                 if (srcFile.length() % bufferSize != 0) {
                     partsCount++;
                 }
-                FileMessage fileMessage = new FileMessage(dst.toString(), -1, partsCount, new byte[bufferSize]);
+                FileMessageCommand fileMessage = new FileMessageCommand(dst.toString(), -1, partsCount, new byte[bufferSize]);
                 FileInputStream in = new FileInputStream(srcFile);
                 for (int i = 0; i < partsCount; i++) {
                     int readByte = in.read(fileMessage.data);
@@ -33,6 +38,9 @@ public class FileTransfer {
                     Network.getInstance().getOut().writeObject(fileMessage);
                     partSend++;
                     System.out.println((int)(((float)partSend / partsCount) * 100 ) + "%");
+                    int finalPartSend = partSend;
+                    int finalPartsCount = partsCount;
+                    Platform.runLater(() -> progressBar.setProgress((((float) finalPartSend / finalPartsCount))));
                 }
                 in.close();
                 cdl.countDown();
@@ -41,5 +49,44 @@ public class FileTransfer {
                 cdl.countDown();
             }
         }).start();
+    }
+
+    public static void getFileFromServer(Path src, Path dst, CountDownLatch cdl, ProgressBar progressBar) {
+        try {
+            Network.getInstance().getOut().writeObject(new FileRequestCommand(src.toString()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        new Thread(() -> {
+            try {
+                while (true) {
+                    Object input = Network.getInstance().getIn().readObject();
+                    FileMessageCommand fileMessage = (FileMessageCommand) input;
+                    boolean append = true;
+                    if (fileMessage.partNumber == 1) {
+                        append = false;
+                    }
+                    FileOutputStream fos = new FileOutputStream(dst.toString(), append);
+                    fos.write(fileMessage.data);
+                    fos.close();
+                    Platform.runLater(() -> progressBar.setProgress((((float)fileMessage.partNumber / fileMessage.partCount))));
+                    System.out.println((int)(((float)fileMessage.partNumber / fileMessage.partCount) * 100 ) + "%");
+                    if (fileMessage.partNumber == fileMessage.partCount) {
+                        cdl.countDown();
+                        break;
+                    }
+                }
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    public static void deleteFileFromServer(Path path) {
+        try {
+            Network.getInstance().getOut().writeObject(new RemoveFileCommand(path.toString()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

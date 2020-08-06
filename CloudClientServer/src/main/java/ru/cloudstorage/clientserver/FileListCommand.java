@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class FileList implements Serializable {
+public class FileListCommand implements Serializable {
 
     private List<FileInfo> fileInfoList;
     private String rootPath;

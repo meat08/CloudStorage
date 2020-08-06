@@ -3,7 +3,7 @@ package ru.cloudstorage.server.controllers;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
-import ru.cloudstorage.clientserver.FileList;
+import ru.cloudstorage.clientserver.FileListCommand;
 import ru.cloudstorage.clientserver.GetFileListCommand;
 import ru.cloudstorage.server.network.Network;
 
@@ -25,7 +25,7 @@ public class RightPanelController extends PanelController {
     public void updateList(Path path) {
         try {
             Network.getInstance().getOut().writeObject(new GetFileListCommand(path));
-            FileList fileList = (FileList) Network.getInstance().getIn().readObject();
+            FileListCommand fileList = (FileListCommand) Network.getInstance().getIn().readObject();
             pathField.setText(Paths.get(fileList.getRootPath()).normalize().toString());
             filesTable.getItems().clear();
             filesTable.getItems().addAll(fileList.getFileInfoList());

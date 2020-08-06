@@ -53,7 +53,7 @@ public class Network {
             InetSocketAddress serverAddress = new InetSocketAddress(host, port);
             currentChannel = SocketChannel.open(serverAddress);
             out = new ObjectEncoderOutputStream(currentChannel.socket().getOutputStream());
-            in = new ObjectDecoderInputStream(currentChannel.socket().getInputStream());
+            in = new ObjectDecoderInputStream(currentChannel.socket().getInputStream(), 100 * 1024 * 1024);
         } catch (IOException e) {
             e.printStackTrace();
         }

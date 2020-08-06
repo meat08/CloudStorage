@@ -1,12 +1,12 @@
 package ru.cloudstorage.server.controllers;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import ru.cloudstorage.clientserver.AuthorisationCommand;
+import ru.cloudstorage.clientserver.FileInfo;
 import ru.cloudstorage.server.network.Network;
 import ru.cloudstorage.server.util.FileTransfer;
 
@@ -40,13 +40,15 @@ public class MainController {
     TextField loginField;
     @FXML
     PasswordField passwordField;
+    @FXML
+    ProgressBar progressBar;
 
-    public void btnExitAction(ActionEvent actionEvent) {
+    public void btnExitAction() {
         Network.getInstance().stop();
         Platform.exit();
     }
 
-    public void btnLoginAction(ActionEvent actionEvent) throws Exception {
+    public void btnLoginAction() throws Exception {
         String login = loginField.getText();
         String password = passwordField.getText();
         if (login.isEmpty() || password.isEmpty()) {
@@ -70,54 +72,91 @@ public class MainController {
         }
     }
 
-    public void btnUpdateAction(ActionEvent actionEvent) {
+    public void btnUpdateAction() {
         Path path = Paths.get(rightPanelController.pathField.getText());
         rightPanelController.updateList(path);
+        path = Paths.get(leftPanelController.pathField.getText());
+        leftPanelController.updateList(path);
     }
 
-    public void btnCopyAction(ActionEvent actionEvent) {
-        checkPanel();
+    public void btnCopyAction() {
+        if (checkPanel()) {
+            return;
+        }
+
+        Optional<ButtonType> option = Optional.empty();
+        for (FileInfo file : dstPC.filesTable.getItems()) {
+            if (file.getFilename().equals(srcPath.getFileName().toString())) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Заменить файл в папке назначения?");
+                alert.getDialogPane().setHeaderText(null);
+                option = alert.showAndWait();
+                break;
+            }
+        }
+        if (option.isPresent()) {
+            if (option.get() != ButtonType.OK) {
+                return;
+            }
+        }
 
         CountDownLatch cdl = new CountDownLatch(1);
         if (fromClient) {
-            FileTransfer.putFileToServer(srcPath, dstPath, cdl);
-            buttonBlock.setDisable(true);
-                new Thread(() -> {
-                    try {
-                        cdl.await();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    rightPanelController.updateList(dstPath.getParent());
-                    buttonBlock.setDisable(false);
-                }).start();
+            FileTransfer.putFileToServer(srcPath, dstPath, cdl, progressBar);
+            waitProcess(cdl, rightPanelController);
+        } else {
+            FileTransfer.getFileFromServer(srcPath, dstPath, cdl, progressBar);
+            waitProcess(cdl, leftPanelController);
         }
     }
 
-    public void btnDeleteAction(ActionEvent actionEvent) {
-        checkPanel();
+    private void waitProcess(CountDownLatch cdl, PanelController panel) {
+        buttonBlock.setDisable(true);
+        progressBar.setVisible(true);
+        progressBar.setManaged(true);
+        new Thread(() -> {
+            try {
+                cdl.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            panel.updateList(dstPath.getParent());
+            buttonBlock.setDisable(false);
+            progressBar.setVisible(false);
+            progressBar.setManaged(false);
+        }).start();
+    }
+
+    public void btnDeleteAction() {
+        if (checkPanel()) {
+            return;
+        }
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Действительно удалить файл?");
+        alert.getDialogPane().setHeaderText(null);
         Optional<ButtonType> option = alert.showAndWait();
 
-        if (option.get() == ButtonType.OK) {
-            if (fromClient) {
-                try {
-                    Files.delete(dstPath);
-                    leftPanelController.updateList(srcPath.getParent());
-                } catch (IOException e) {
-                    e.printStackTrace();
+        if (option.isPresent()) {
+            if (option.get() == ButtonType.OK) {
+                if (fromClient) {
+                    try {
+                        Files.delete(srcPath);
+                        leftPanelController.updateList(srcPath.getParent());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    FileTransfer.deleteFileFromServer(srcPath);
+                    rightPanelController.updateList(srcPath.getParent());
                 }
-            } else {
             }
         }
     }
 
-    private void checkPanel() {
+    private boolean checkPanel() {
         if (leftPanelController.getSelectedFilename() == null && rightPanelController.getSelectedFilename() == null) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Ни один файл не был выбран", ButtonType.OK);
             alert.getDialogPane().setHeaderText(null);
             alert.showAndWait();
-            return;
+            return true;
         }
 
         if (leftPanelController.getSelectedFilename() != null) {
@@ -131,8 +170,17 @@ public class MainController {
             fromClient = false;
         }
 
+        if (srcPC.filesTable.getSelectionModel().getSelectedItem().getType() == FileInfo.FileType.DIRECTORY) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Выбрана директория. Выберете файл", ButtonType.OK);
+            alert.getDialogPane().setHeaderText(null);
+            alert.showAndWait();
+            return true;
+        }
+
         srcPath = Paths.get(srcPC.getCurrentPath(), srcPC.getSelectedFilename());
         dstPath = Paths.get(dstPC.getCurrentPath(), srcPath.getFileName().toString());
+
+        return false;
     }
 
     private void afterAuthorise() {
