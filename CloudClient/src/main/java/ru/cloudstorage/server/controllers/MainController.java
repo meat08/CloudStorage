@@ -57,7 +57,7 @@ public class MainController {
             AuthorisationCommand command = new AuthorisationCommand(login, password);
             Network.getInstance().getOut().writeObject(command);
             command = (AuthorisationCommand) Network.getInstance().getIn().readObject();
-            if (command.isAuthorise()) {
+            if (command.isAuthorise() & !command.isLogin()) {
                 this.leftPanelController = (LeftPanelController) leftPanel.getProperties().get("ctrl");
                 this.rightPanelController = (RightPanelController) rightPanel.getProperties().get("ctrl");
                 loginLabel.setText("Авторизован");
@@ -65,6 +65,8 @@ public class MainController {
                 leftPanelController.create();
                 rightPanelController.create();
                 afterAuthorise();
+            } else if (command.isLogin()) {
+                loginLabel.setText(command.getMessage());
             } else {
                 loginLabel.setText("Неверный логин или пароль");
             }

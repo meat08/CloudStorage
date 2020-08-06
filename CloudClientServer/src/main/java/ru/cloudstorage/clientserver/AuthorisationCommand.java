@@ -8,6 +8,8 @@ public class AuthorisationCommand implements Serializable {
     private boolean isAuthorise;
     private String rootDir;
     private String clientDir;
+    private boolean isLogin;
+    private String message;
 
     public AuthorisationCommand(String login, String password) {
         this.login = login;
@@ -44,5 +46,21 @@ public class AuthorisationCommand implements Serializable {
 
     public void setClientDir(String clientDir) {
         this.clientDir = clientDir;
+    }
+
+    public boolean isLogin() {
+        return isLogin;
+    }
+
+    public void setIsLogin(boolean login) {
+        isLogin = login;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

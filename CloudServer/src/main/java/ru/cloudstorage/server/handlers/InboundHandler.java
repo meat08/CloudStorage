@@ -18,6 +18,7 @@ import java.util.Arrays;
 
 public class InboundHandler extends ChannelInboundHandlerAdapter {
     private static final Logger logger = Logger.getLogger(NetworkServer.class);
+    private String login;
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
@@ -27,8 +28,9 @@ public class InboundHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        System.out.println("Клиент отключился. Addr: " + ctx.channel().remoteAddress());
-        logger.info("Клиент отключился. Addr: " + ctx.channel().remoteAddress());
+        System.out.println("Клиент отключился. Addr: " + ctx.channel().remoteAddress() + " Login: " + login);
+        NetworkServer.getDatabaseService().setIsLogin(login, false);
+        logger.info("Клиент отключился. Addr: " + ctx.channel().remoteAddress() + " Login: " + login);
         ctx.close();
     }
 
@@ -99,12 +101,18 @@ public class InboundHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void authorisationProcess(ChannelHandlerContext ctx, AuthorisationCommand msg) throws IOException {
-        String login = msg.getLogin();
+        this.login = msg.getLogin();
         String password = msg.getPassword();
         boolean isAuthorise = NetworkServer.getDatabaseService().isAuthorise(login, password);
+        boolean isLogin = NetworkServer.getDatabaseService().isLogin(login);
         msg.setAuthorise(isAuthorise);
-        if (isAuthorise) {
+        if (isLogin) {
+            msg.setIsLogin(true);
+            msg.setMessage("Клиент с таким логином уже авторизован.");
+        }
+        if (isAuthorise & !isLogin) {
             String[] paths = FileUtil.createHomeDir(login);
+            NetworkServer.getDatabaseService().setIsLogin(login, true);
             msg.setRootDir(paths[0]);
             msg.setClientDir(paths[1]);
         }
@@ -122,7 +130,8 @@ public class InboundHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (cause instanceof IOException) {
             System.out.println("Клиент разорвал соединение");
-            logger.info("Клиент разорвал соединение. Adr: " + ctx.channel().remoteAddress());
+            logger.info("Клиент разорвал соединение. Adr: " + ctx.channel().remoteAddress() + " Login: " + login);
+            NetworkServer.getDatabaseService().setIsLogin(login, false);
         } else {
             cause.printStackTrace();
             logger.fatal("Возникло исключение: " + cause.getMessage());

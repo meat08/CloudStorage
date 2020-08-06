@@ -12,6 +12,7 @@ public class DatabaseService {
     public void start() {
         try {
             connection = DriverManager.getConnection(URL);
+            resetIsLogin();
             logger.info("База данных подключена");
             System.out.println("База данных подключена");
         } catch (SQLException e) {
@@ -47,5 +48,45 @@ public class DatabaseService {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public void setIsLogin(String login, boolean isLogin) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(
+                    "UPDATE users SET isLogin = ? WHERE login = ?"
+            );
+            statement.setInt(1, isLogin ? 1 : 0);
+            statement.setString(2, login);
+            statement.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean isLogin(String login) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT id FROM users WHERE login = ? AND isLogin = 1"
+            );
+            statement.setString(1, login);
+            ResultSet result = statement.executeQuery();
+            if (result.next()) {
+                return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private void resetIsLogin() {
+        try {
+            PreparedStatement statement = connection.prepareStatement(
+                    "UPDATE users SET isLogin = 0"
+            );
+            statement.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
