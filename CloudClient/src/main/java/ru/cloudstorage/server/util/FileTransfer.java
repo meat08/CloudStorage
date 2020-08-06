@@ -13,11 +13,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.concurrent.CountDownLatch;
 
 public class FileTransfer {
 
-    public static void putFileToServer(Path src, Path dst, CountDownLatch cdl, ProgressBar progressBar)  {
+    public static void putFileToServer(Path src, Path dst, ProgressBar progressBar, WaitCallback callback)  {
         new Thread(() -> {
             try {
                 File srcFile = src.toFile();
@@ -43,15 +42,15 @@ public class FileTransfer {
                     Platform.runLater(() -> progressBar.setProgress((((float) finalPartSend / finalPartsCount))));
                 }
                 in.close();
-                cdl.countDown();
+                callback.callback();
             } catch (Exception e) {
+                callback.callback();
                 e.printStackTrace();
-                cdl.countDown();
             }
         }).start();
     }
 
-    public static void getFileFromServer(Path src, Path dst, CountDownLatch cdl, ProgressBar progressBar) {
+    public static void getFileFromServer(Path src, Path dst, ProgressBar progressBar, WaitCallback callback) {
         try {
             Network.getInstance().getOut().writeObject(new FileRequestCommand(src.toString()));
         } catch (IOException e) {
@@ -72,7 +71,7 @@ public class FileTransfer {
                     Platform.runLater(() -> progressBar.setProgress((((float)fileMessage.partNumber / fileMessage.partCount))));
                     System.out.println((int)(((float)fileMessage.partNumber / fileMessage.partCount) * 100 ) + "%");
                     if (fileMessage.partNumber == fileMessage.partCount) {
-                        cdl.countDown();
+                        callback.callback();
                         break;
                     }
                 }

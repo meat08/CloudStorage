@@ -101,31 +101,25 @@ public class MainController {
             }
         }
 
-        CountDownLatch cdl = new CountDownLatch(1);
+        waitProcess();
         if (fromClient) {
-            FileTransfer.putFileToServer(srcPath, dstPath, cdl, progressBar);
-            waitProcess(cdl, rightPanelController);
+            FileTransfer.putFileToServer(srcPath, dstPath, progressBar, () -> finishProcess(rightPanelController));
         } else {
-            FileTransfer.getFileFromServer(srcPath, dstPath, cdl, progressBar);
-            waitProcess(cdl, leftPanelController);
+            FileTransfer.getFileFromServer(srcPath, dstPath, progressBar, () -> finishProcess(leftPanelController));
         }
     }
 
-    private void waitProcess(CountDownLatch cdl, PanelController panel) {
+    private void waitProcess() {
         buttonBlock.setDisable(true);
         progressBar.setVisible(true);
         progressBar.setManaged(true);
-        new Thread(() -> {
-            try {
-                cdl.await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            panel.updateList(dstPath.getParent());
-            buttonBlock.setDisable(false);
-            progressBar.setVisible(false);
-            progressBar.setManaged(false);
-        }).start();
+    }
+
+    private void finishProcess(PanelController panel) {
+        panel.updateList(dstPath.getParent());
+        buttonBlock.setDisable(false);
+        progressBar.setVisible(false);
+        progressBar.setManaged(false);
     }
 
     public void btnDeleteAction() {
