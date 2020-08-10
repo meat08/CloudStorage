@@ -32,6 +32,7 @@ public class RightPanelController extends PanelController {
             filesTable.sort();
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.WARNING, "Не удалось обновить список файлов", ButtonType.OK);
+            alert.getDialogPane().setHeaderText(null);
             alert.showAndWait();
         }
     }

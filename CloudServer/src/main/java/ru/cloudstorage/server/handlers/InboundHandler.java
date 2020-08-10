@@ -70,6 +70,11 @@ public class InboundHandler extends ChannelInboundHandlerAdapter {
                 }
                 FileMessageCommand fileMessage = new FileMessageCommand(file.getName(), -1, partsCount, new byte[bufSize]);
                 FileInputStream in = new FileInputStream(file);
+                if (partsCount == 0) {
+                    fileMessage.partNumber = 0;
+                    fileMessage.partCount = 0;
+                    ctx.writeAndFlush(fileMessage);
+                }
                 for (int i = 0; i < partsCount; i++) {
                     int readBytes = in.read(fileMessage.data);
                     fileMessage.partNumber = i+1;
@@ -89,6 +94,9 @@ public class InboundHandler extends ChannelInboundHandlerAdapter {
     private void getFileFromClient(FileMessageCommand msg) {
         try {
             boolean append = true;
+            if (msg.partCount == 0) {
+                return;
+            }
             if (msg.partNumber == 1) {
                 append = false;
             }

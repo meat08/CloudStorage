@@ -16,7 +16,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
 
 public class MainController {
 
@@ -48,12 +47,20 @@ public class MainController {
         Platform.exit();
     }
 
-    public void btnLoginAction() throws Exception {
-        sendAuthorisationRequest(false);
+    public void btnLoginAction() {
+        try {
+            sendAuthorisationRequest(false);
+        } catch (Exception e) {
+            showServerConnectionError();
+        }
     }
 
-    public void btnRegistrationAction() throws Exception {
-        sendAuthorisationRequest(true);
+    public void btnRegistrationAction() {
+        try {
+            sendAuthorisationRequest(true);
+        } catch (Exception e) {
+            showServerConnectionError();
+        }
     }
 
     public void btnShowReg() {
@@ -99,9 +106,13 @@ public class MainController {
 
         waitProcess();
         if (fromClient) {
-            FileTransfer.putFileToServer(srcPath, dstPath, progressBar, () -> finishProcess(rightPanelController));
+            FileTransfer.putFileToServer(srcPath, dstPath, progressBar,
+                    () -> finishProcess(rightPanelController),
+                    this::showServerConnectionError);
         } else {
-            FileTransfer.getFileFromServer(srcPath, dstPath, progressBar, () -> finishProcess(leftPanelController));
+            FileTransfer.getFileFromServer(srcPath, dstPath, progressBar,
+                    () -> finishProcess(leftPanelController),
+                    this::showServerConnectionError);
         }
     }
 
@@ -223,6 +234,15 @@ public class MainController {
         dstPath = Paths.get(dstPC.getCurrentPath(), srcPath.getFileName().toString());
 
         return false;
+    }
+
+    private void showServerConnectionError() {
+        Alert alert = new Alert(Alert.AlertType.ERROR, "Сервер недоступен!", ButtonType.OK);
+        alert.getDialogPane().setHeaderText(null);
+        alert.showAndWait();
+        buttonBlock.setDisable(false);
+        progressBar.setVisible(false);
+        progressBar.setManaged(false);
     }
 
     private void afterAuthorise() {

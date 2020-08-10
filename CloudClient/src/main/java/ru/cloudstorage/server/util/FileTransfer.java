@@ -1,6 +1,8 @@
 package ru.cloudstorage.server.util;
 
 import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ProgressBar;
 import ru.cloudstorage.clientserver.FileMessageCommand;
 import ru.cloudstorage.clientserver.FileRequestCommand;
@@ -16,7 +18,7 @@ import java.util.Arrays;
 
 public class FileTransfer {
 
-    public static void putFileToServer(Path src, Path dst, ProgressBar progressBar, WaitCallback callback)  {
+    public static void putFileToServer(Path src, Path dst, ProgressBar progressBar, WaitCallback callback, ErrorCallback error)  {
         new Thread(() -> {
             try {
                 File srcFile = src.toFile();
@@ -28,6 +30,12 @@ public class FileTransfer {
                 }
                 FileMessageCommand fileMessage = new FileMessageCommand(dst.toString(), -1, partsCount, new byte[bufferSize]);
                 FileInputStream in = new FileInputStream(srcFile);
+                if (partsCount == 0) {
+                    fileMessage.partNumber = 0;
+                    fileMessage.partCount = 0;
+                    Network.getInstance().getOut().writeObject(fileMessage);
+                    nullFileSizeAlert();
+                }
                 for (int i = 0; i < partsCount; i++) {
                     int readByte = in.read(fileMessage.data);
                     fileMessage.partNumber = i + 1;
@@ -36,7 +44,6 @@ public class FileTransfer {
                     }
                     Network.getInstance().getOut().writeObject(fileMessage);
                     partSend++;
-                    System.out.println((int)(((float)partSend / partsCount) * 100 ) + "%");
                     int finalPartSend = partSend;
                     int finalPartsCount = partsCount;
                     Platform.runLater(() -> progressBar.setProgress((((float) finalPartSend / finalPartsCount))));
@@ -44,23 +51,28 @@ public class FileTransfer {
                 in.close();
                 callback.callback();
             } catch (Exception e) {
-                callback.callback();
-                e.printStackTrace();
+                Platform.runLater(error::error);
             }
         }).start();
     }
 
-    public static void getFileFromServer(Path src, Path dst, ProgressBar progressBar, WaitCallback callback) {
+    public static void getFileFromServer(Path src, Path dst, ProgressBar progressBar, WaitCallback callback, ErrorCallback error) {
         try {
             Network.getInstance().getOut().writeObject(new FileRequestCommand(src.toString()));
         } catch (IOException e) {
-            e.printStackTrace();
+            error.error();
+            return;
         }
         new Thread(() -> {
             try {
                 while (true) {
                     Object input = Network.getInstance().getIn().readObject();
                     FileMessageCommand fileMessage = (FileMessageCommand) input;
+                    if (fileMessage.partCount == 0) {
+                        callback.callback();
+                        nullFileSizeAlert();
+                        break;
+                    }
                     boolean append = true;
                     if (fileMessage.partNumber == 1) {
                         append = false;
@@ -69,7 +81,6 @@ public class FileTransfer {
                     fos.write(fileMessage.data);
                     fos.close();
                     Platform.runLater(() -> progressBar.setProgress((((float)fileMessage.partNumber / fileMessage.partCount))));
-                    System.out.println((int)(((float)fileMessage.partNumber / fileMessage.partCount) * 100 ) + "%");
                     if (fileMessage.partNumber == fileMessage.partCount) {
                         callback.callback();
                         break;
@@ -87,5 +98,13 @@ public class FileTransfer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void nullFileSizeAlert() {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Размер файла должен быть больше 0!", ButtonType.OK);
+            alert.getDialogPane().setHeaderText(null);
+            alert.showAndWait();
+        });
     }
 }
