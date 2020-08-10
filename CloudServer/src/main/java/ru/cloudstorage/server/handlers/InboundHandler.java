@@ -103,6 +103,21 @@ public class InboundHandler extends ChannelInboundHandlerAdapter {
     private void authorisationProcess(ChannelHandlerContext ctx, AuthorisationCommand msg) throws IOException {
         this.login = msg.getLogin();
         String password = msg.getPassword();
+        if (msg.isRegistration()) {
+            boolean isLoginExist = NetworkServer.getDatabaseService().isLoginExist(login);
+            if (isLoginExist) {
+                msg.setLoginExist(true);
+            } else {
+                NetworkServer.getDatabaseService().registration(login, password);
+                authorise(msg, password);
+            }
+        } else {
+            authorise(msg, password);
+        }
+        ctx.writeAndFlush(msg);
+    }
+
+    private void authorise(AuthorisationCommand msg, String password) throws IOException {
         boolean isAuthorise = NetworkServer.getDatabaseService().isAuthorise(login, password);
         boolean isLogin = NetworkServer.getDatabaseService().isLogin(login);
         msg.setAuthorise(isAuthorise);
@@ -116,7 +131,6 @@ public class InboundHandler extends ChannelInboundHandlerAdapter {
             msg.setRootDir(paths[0]);
             msg.setClientDir(paths[1]);
         }
-        ctx.writeAndFlush(msg);
     }
 
     private void sendFileList(ChannelHandlerContext ctx, GetFileListCommand msg) {

@@ -9,6 +9,8 @@ public class AuthorisationCommand implements Serializable {
     private String rootDir;
     private String clientDir;
     private boolean isLogin;
+    private boolean isRegistration;
+    private boolean isLoginExist;
     private String message;
 
     public AuthorisationCommand(String login, String password) {
@@ -62,5 +64,25 @@ public class AuthorisationCommand implements Serializable {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public boolean isRegistration() {
+        return isRegistration;
+    }
+
+    public void setRegistration(boolean registration) {
+        isRegistration = registration;
+    }
+
+    public void setLogin(boolean login) {
+        isLogin = login;
+    }
+
+    public boolean isLoginExist() {
+        return isLoginExist;
+    }
+
+    public void setLoginExist(boolean loginExist) {
+        isLoginExist = loginExist;
     }
 }

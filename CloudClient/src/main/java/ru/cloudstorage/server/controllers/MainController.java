@@ -31,15 +31,15 @@ public class MainController {
     @FXML
     HBox buttonBlock;
     @FXML
-    VBox loginBox;
+    VBox loginBox, loginBoxInternal, regBox;
     @FXML
     HBox tablePanel;
     @FXML
     Label loginLabel;
     @FXML
-    TextField loginField;
+    TextField loginField, loginFieldReg;
     @FXML
-    PasswordField passwordField;
+    PasswordField passwordField, passwordFieldReg1, passwordFieldReg2;
     @FXML
     ProgressBar progressBar;
 
@@ -49,29 +49,25 @@ public class MainController {
     }
 
     public void btnLoginAction() throws Exception {
-        String login = loginField.getText();
-        String password = passwordField.getText();
-        if (login.isEmpty() || password.isEmpty()) {
-            loginLabel.setText("Заполните все поля!");
-        } else {
-            AuthorisationCommand command = new AuthorisationCommand(login, password);
-            Network.getInstance().getOut().writeObject(command);
-            command = (AuthorisationCommand) Network.getInstance().getIn().readObject();
-            if (command.isAuthorise() & !command.isLogin()) {
-                this.leftPanelController = (LeftPanelController) leftPanel.getProperties().get("ctrl");
-                this.rightPanelController = (RightPanelController) rightPanel.getProperties().get("ctrl");
-                loginLabel.setText("Авторизован");
-                rightPanelController.setServerPaths(command.getRootDir(), command.getClientDir());
-                leftPanelController.create();
-                rightPanelController.create();
-                afterAuthorise();
-            } else if (command.isLogin()) {
-                loginLabel.setText(command.getMessage());
-            } else {
-                loginLabel.setText("Неверный логин или пароль");
-            }
+        sendAuthorisationRequest(false);
+    }
 
-        }
+    public void btnRegistrationAction() throws Exception {
+        sendAuthorisationRequest(true);
+    }
+
+    public void btnShowReg() {
+        loginBoxInternal.setVisible(false);
+        loginBoxInternal.setManaged(false);
+        regBox.setVisible(true);
+        regBox.setManaged(true);
+    }
+
+    public void btnHideReg() {
+        regBox.setVisible(false);
+        regBox.setManaged(false);
+        loginBoxInternal.setVisible(true);
+        loginBoxInternal.setManaged(true);
     }
 
     public void btnUpdateAction() {
@@ -106,6 +102,56 @@ public class MainController {
             FileTransfer.putFileToServer(srcPath, dstPath, progressBar, () -> finishProcess(rightPanelController));
         } else {
             FileTransfer.getFileFromServer(srcPath, dstPath, progressBar, () -> finishProcess(leftPanelController));
+        }
+    }
+
+    private void sendAuthorisationRequest(boolean isRegistration) throws Exception {
+        if (isRegistration) {
+            String regLogin = loginFieldReg.getText();
+            String regPass1 = passwordFieldReg1.getText();
+            String regPass2 = passwordFieldReg2.getText();
+            if (regLogin.isEmpty() || regPass1.isEmpty() || regPass2.isEmpty()) {
+                loginLabel.setText("Заполните все поля!");
+            } else if (!regPass1.equals(regPass2)) {
+                loginLabel.setText("Введенные пароли не совпадают.");
+            } else {
+                AuthorisationCommand command = new AuthorisationCommand(regLogin, regPass1);
+                command.setRegistration(true);
+                Network.getInstance().getOut().writeObject(command);
+                command = (AuthorisationCommand) Network.getInstance().getIn().readObject();
+                if (command.isLoginExist()) {
+                    loginLabel.setText("Пользователь с таким логином уже зарегистрирован.");
+                } else {
+                    authoriseProcess(command);
+                }
+            }
+        } else {
+            String login = loginField.getText();
+            String password = passwordField.getText();
+            if (login.isEmpty() || password.isEmpty()) {
+                loginLabel.setText("Заполните все поля!");
+            } else {
+                AuthorisationCommand command = new AuthorisationCommand(login, password);
+                Network.getInstance().getOut().writeObject(command);
+                command = (AuthorisationCommand) Network.getInstance().getIn().readObject();
+                authoriseProcess(command);
+            }
+        }
+    }
+
+    private void authoriseProcess(AuthorisationCommand command) {
+        if (command.isAuthorise() & !command.isLogin()) {
+            this.leftPanelController = (LeftPanelController) leftPanel.getProperties().get("ctrl");
+            this.rightPanelController = (RightPanelController) rightPanel.getProperties().get("ctrl");
+            loginLabel.setText("Авторизован");
+            rightPanelController.setServerPaths(command.getRootDir(), command.getClientDir());
+            leftPanelController.create();
+            rightPanelController.create();
+            afterAuthorise();
+        } else if (command.isLogin()) {
+            loginLabel.setText(command.getMessage());
+        } else {
+            loginLabel.setText("Неверный логин или пароль");
         }
     }
 
