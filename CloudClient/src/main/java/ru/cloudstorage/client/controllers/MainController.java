@@ -1,4 +1,4 @@
-package ru.cloudstorage.server.controllers;
+package ru.cloudstorage.client.controllers;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -7,8 +7,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import ru.cloudstorage.clientserver.AuthorisationCommand;
 import ru.cloudstorage.clientserver.FileInfo;
-import ru.cloudstorage.server.network.Network;
-import ru.cloudstorage.server.util.FileTransfer;
+import ru.cloudstorage.client.network.Network;
+import ru.cloudstorage.client.util.FileTransfer;
 
 
 import java.io.IOException;

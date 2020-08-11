@@ -1,7 +1,7 @@
-package ru.cloudstorage.server;
+package ru.cloudstorage.client;
 
 import org.apache.log4j.Logger;
-import ru.cloudstorage.server.util.ServerProperties;
+import ru.cloudstorage.client.util.ServerProperties;
 
 public class CloudServer {
     private static final int DEFAULT_PORT = 8180;

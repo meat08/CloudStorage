@@ -9,7 +9,7 @@
 <?import javafx.geometry.Insets?>
 <VBox alignment="center" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="ru.cloudstorage.server.controllers.MainController"
+      fx:controller="ru.cloudstorage.client.controllers.MainController"
       prefHeight="400.0" prefWidth="600.0">
 
     <VBox fx:id="loginBox" alignment="CENTER" style=" -fx-border-color:black; -fx-border-width: 1; -fx-border-style: solid;">

@@ -1,4 +1,4 @@
-package ru.cloudstorage.server.util;
+package ru.cloudstorage.client.util;
 
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
@@ -7,7 +7,7 @@ import javafx.scene.control.ProgressBar;
 import ru.cloudstorage.clientserver.FileMessageCommand;
 import ru.cloudstorage.clientserver.FileRequestCommand;
 import ru.cloudstorage.clientserver.RemoveFileCommand;
-import ru.cloudstorage.server.network.Network;
+import ru.cloudstorage.client.network.Network;
 
 import java.io.File;
 import java.io.FileInputStream;

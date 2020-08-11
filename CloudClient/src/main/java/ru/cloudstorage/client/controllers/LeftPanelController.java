@@ -1,4 +1,4 @@
-package ru.cloudstorage.server.controllers;
+package ru.cloudstorage.client.controllers;
 
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;

@@ -1,11 +1,11 @@
-package ru.cloudstorage.server.handlers;
+package ru.cloudstorage.client.handlers;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.apache.log4j.Logger;
 import ru.cloudstorage.clientserver.*;
-import ru.cloudstorage.server.NetworkServer;
-import ru.cloudstorage.server.util.FileUtil;
+import ru.cloudstorage.client.NetworkServer;
+import ru.cloudstorage.client.util.FileUtil;
 
 import java.io.File;
 import java.io.FileInputStream;

@@ -1,4 +1,4 @@
-package ru.cloudstorage.server.util;
+package ru.cloudstorage.client.util;
 
 import java.io.IOException;
 import java.io.InputStream;

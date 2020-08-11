@@ -1,11 +1,11 @@
-package ru.cloudstorage.server.controllers;
+package ru.cloudstorage.client.controllers;
 
 import javafx.event.ActionEvent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import ru.cloudstorage.clientserver.FileListCommand;
 import ru.cloudstorage.clientserver.GetFileListCommand;
-import ru.cloudstorage.server.network.Network;
+import ru.cloudstorage.client.network.Network;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
