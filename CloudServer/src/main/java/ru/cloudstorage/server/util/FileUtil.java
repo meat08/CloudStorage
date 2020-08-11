@@ -1,7 +1,7 @@
-package ru.cloudstorage.client.util;
+package ru.cloudstorage.server.util;
 
 import org.apache.log4j.Logger;
-import ru.cloudstorage.client.NetworkServer;
+import ru.cloudstorage.server.NetworkServer;
 
 import java.io.IOException;
 import java.nio.file.Files;

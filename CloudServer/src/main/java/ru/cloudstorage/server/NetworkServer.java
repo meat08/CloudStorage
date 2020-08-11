@@ -1,4 +1,4 @@
-package ru.cloudstorage.client;
+package ru.cloudstorage.server;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -11,8 +11,8 @@ import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 import org.apache.log4j.Logger;
-import ru.cloudstorage.client.database.DatabaseService;
-import ru.cloudstorage.client.handlers.InboundHandler;
+import ru.cloudstorage.server.database.DatabaseService;
+import ru.cloudstorage.server.handlers.InboundHandler;
 
 public class NetworkServer {
     private final int port;

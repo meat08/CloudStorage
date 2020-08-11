@@ -1,4 +1,4 @@
-package ru.cloudstorage.client.database;
+package ru.cloudstorage.server.database;
 
 import org.apache.log4j.Logger;
 

@@ -1,4 +1,4 @@
-package ru.cloudstorage.client.util;
+package ru.cloudstorage.server.util;
 
 import java.io.InputStream;
 import java.util.Properties;
