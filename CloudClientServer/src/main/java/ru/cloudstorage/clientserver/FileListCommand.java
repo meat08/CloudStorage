@@ -1,13 +1,12 @@
 package ru.cloudstorage.clientserver;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class FileListCommand implements Serializable {
+public class FileListCommand extends Command {
 
     private List<FileInfo> fileInfoList;
     private String rootPath;
