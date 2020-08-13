@@ -2,7 +2,7 @@ package ru.cloudstorage.clientserver;
 
 import java.io.Serializable;
 
-public class FileRequestCommand implements Serializable {
+public class FileRequestCommand extends Command {
 
     private String filePath;
 

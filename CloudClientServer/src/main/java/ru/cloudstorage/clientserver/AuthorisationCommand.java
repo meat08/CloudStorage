@@ -1,8 +1,6 @@
 package ru.cloudstorage.clientserver;
 
-import java.io.Serializable;
-
-public class AuthorisationCommand implements Serializable {
+public class AuthorisationCommand extends Command {
     private final String login;
     private final String password;
     private boolean isAuthorise;

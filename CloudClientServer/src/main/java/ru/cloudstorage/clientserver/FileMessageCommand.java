@@ -2,7 +2,7 @@ package ru.cloudstorage.clientserver;
 
 import java.io.Serializable;
 
-public class FileMessageCommand implements Serializable {
+public class FileMessageCommand extends Command {
 
     public String dstFilePath;
     public int partNumber;
