@@ -3,7 +3,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import ru.cloudstorage.server.network.Network;
+import ru.cloudstorage.client.network.Network;
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;

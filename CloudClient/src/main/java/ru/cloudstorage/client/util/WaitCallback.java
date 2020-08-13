@@ -1,4 +1,4 @@
-package ru.cloudstorage.server.util;
+package ru.cloudstorage.client.util;
 
 public interface WaitCallback {
     void callback();

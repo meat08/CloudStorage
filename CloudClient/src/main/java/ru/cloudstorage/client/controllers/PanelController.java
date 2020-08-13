@@ -1,4 +1,4 @@
-package ru.cloudstorage.server.controllers;
+package ru.cloudstorage.client.controllers;
 
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;

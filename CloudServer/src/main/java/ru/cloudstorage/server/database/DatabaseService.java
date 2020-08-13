@@ -79,6 +79,35 @@ public class DatabaseService {
         return false;
     }
 
+    public boolean isLoginExist(String login) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT id FROM users WHERE login = ?"
+            );
+            statement.setString(1, login);
+            ResultSet result = statement.executeQuery();
+            if (result.next()) {
+                return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public void registration(String login, String password) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(
+                    "INSERT INTO users (login , password) VALUES (? , ?)"
+            );
+            statement.setString(1, login);
+            statement.setString(2, password);
+            statement.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void resetIsLogin() {
         try {
             PreparedStatement statement = connection.prepareStatement(

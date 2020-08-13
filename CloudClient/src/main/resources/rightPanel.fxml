@@ -8,7 +8,7 @@
 
 <VBox xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="ru.cloudstorage.server.controllers.RightPanelController">
+            fx:controller="ru.cloudstorage.client.controllers.RightPanelController">
 
         <HBox HBox.hgrow="ALWAYS">
             <TextField fx:id="pathField" editable="false" HBox.hgrow="ALWAYS" visible="false"/>

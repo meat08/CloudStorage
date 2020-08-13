@@ -70,6 +70,11 @@ public class InboundHandler extends ChannelInboundHandlerAdapter {
                 }
                 FileMessageCommand fileMessage = new FileMessageCommand(file.getName(), -1, partsCount, new byte[bufSize]);
                 FileInputStream in = new FileInputStream(file);
+                if (partsCount == 0) {
+                    fileMessage.partNumber = 0;
+                    fileMessage.partCount = 0;
+                    ctx.writeAndFlush(fileMessage);
+                }
                 for (int i = 0; i < partsCount; i++) {
                     int readBytes = in.read(fileMessage.data);
                     fileMessage.partNumber = i+1;
@@ -89,6 +94,9 @@ public class InboundHandler extends ChannelInboundHandlerAdapter {
     private void getFileFromClient(FileMessageCommand msg) {
         try {
             boolean append = true;
+            if (msg.partCount == 0) {
+                return;
+            }
             if (msg.partNumber == 1) {
                 append = false;
             }
@@ -103,6 +111,21 @@ public class InboundHandler extends ChannelInboundHandlerAdapter {
     private void authorisationProcess(ChannelHandlerContext ctx, AuthorisationCommand msg) throws IOException {
         this.login = msg.getLogin();
         String password = msg.getPassword();
+        if (msg.isRegistration()) {
+            boolean isLoginExist = NetworkServer.getDatabaseService().isLoginExist(login);
+            if (isLoginExist) {
+                msg.setLoginExist(true);
+            } else {
+                NetworkServer.getDatabaseService().registration(login, password);
+                authorise(msg, password);
+            }
+        } else {
+            authorise(msg, password);
+        }
+        ctx.writeAndFlush(msg);
+    }
+
+    private void authorise(AuthorisationCommand msg, String password) throws IOException {
         boolean isAuthorise = NetworkServer.getDatabaseService().isAuthorise(login, password);
         boolean isLogin = NetworkServer.getDatabaseService().isLogin(login);
         msg.setAuthorise(isAuthorise);
@@ -116,7 +139,6 @@ public class InboundHandler extends ChannelInboundHandlerAdapter {
             msg.setRootDir(paths[0]);
             msg.setClientDir(paths[1]);
         }
-        ctx.writeAndFlush(msg);
     }
 
     private void sendFileList(ChannelHandlerContext ctx, GetFileListCommand msg) {

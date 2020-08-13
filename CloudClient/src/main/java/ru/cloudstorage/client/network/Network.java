@@ -1,10 +1,10 @@
-package ru.cloudstorage.server.network;
+package ru.cloudstorage.client.network;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import io.netty.handler.codec.serialization.ObjectDecoderInputStream;
 import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
-import ru.cloudstorage.server.util.ClientProperties;
+import ru.cloudstorage.client.util.ClientProperties;
 
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.CountDownLatch;
